@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123c69">
+  <meta name="description" content="Administración local y trazabilidad de herramental">
+  <title>ToolTrack | Administración de Herramental</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <section class="auth-screen" id="authScreen" aria-live="polite"></section>
+
+  <div class="app-shell" id="appShell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">TT</div>
+        <div>
+          <strong>ToolTrack</strong>
+          <span>Control de herramental</span>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="Navegación principal">
+        <button class="nav-item active" data-view="dashboard">
+          <span class="nav-icon">⌂</span><span>Resumen</span>
+        </button>
+        <button class="nav-item" data-view="tools">
+          <span class="nav-icon">▣</span><span>Herramentales</span>
+        </button>
+        <button class="nav-item" data-view="types">
+          <span class="nav-icon">☑</span><span>Tipos y checklists</span>
+        </button>
+        <button class="nav-item" data-view="movements">
+          <span class="nav-icon">⇄</span><span>Entradas y salidas</span>
+        </button>
+        <button class="nav-item" data-view="maintenance">
+          <span class="nav-icon">⚙</span><span>Mantenimiento</span>
+        </button>
+        <button class="nav-item" data-view="traceability">
+          <span class="nav-icon">↳</span><span>Trazabilidad</span>
+        </button>
+        <button class="nav-item" data-view="settings">
+          <span class="nav-icon">⋯</span><span>Configuración</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <span class="status-dot"></span>
+        <div>
+          <strong>Almacenamiento local</strong>
+          <small id="lastSavedLabel">Listo</small>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-button menu-button" id="menuButton" aria-label="Contraer menú" aria-controls="sidebar" aria-expanded="true">☰</button>
+          <div>
+            <p class="eyebrow" id="siteNameLabel">PLANTA / ÁREA</p>
+            <h1 id="pageTitle">Resumen operativo</h1>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <div class="clock" aria-label="Fecha y hora">
+            <strong id="clockTime">--:--</strong>
+            <span id="clockDate">--</span>
+          </div>
+          <button class="operator-button" id="operatorButton" type="button" title="Usuario conectado">
+            <span class="operator-avatar" id="operatorAvatar">AD</span>
+            <span>
+              <small id="operatorRole">Sesión activa</small>
+              <strong id="operatorName">Administrador</strong>
+            </span>
+          </button>
+          <button class="button button-secondary logout-button" id="logoutButton" type="button">Cerrar sesión</button>
+        </div>
+      </header>
+
+      <div class="content-area">
+        <section class="view active" id="view-dashboard" data-title="Resumen operativo">
+          <div class="hero-panel">
+            <div>
+              <p class="eyebrow light">CONTROL DE HERRAMENTAL</p>
+              <h2>Visibilidad completa, desde el Tool Crib hasta la línea.</h2>
+              <p>Consulta disponibilidad, vencimientos y movimientos desde un solo lugar.</p>
+            </div>
+            <div class="hero-actions">
+              <button class="button button-light" data-action="new-tool">+ Dar de alta</button>
+              <button class="button button-outline-light" data-view-link="movements">Registrar salida</button>
+            </div>
+          </div>
+
+          <div class="metrics-grid" id="dashboardMetrics"></div>
+
+          <div class="dashboard-grid">
+            <article class="panel alerts-panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">PRIORIDAD DEL DÍA</p>
+                  <h2>Alertas de mantenimiento</h2>
+                </div>
+                <button class="text-button" data-view-link="maintenance">Ver programa completo →</button>
+              </div>
+              <div id="dashboardAlerts"></div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">ACTIVIDAD</p>
+                  <h2>Movimientos recientes</h2>
+                </div>
+              </div>
+              <div id="recentActivity"></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" id="view-tools" data-title="Herramentales">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">INVENTARIO MAESTRO</p>
+              <h2>Herramentales</h2>
+              <p>Estado, ubicación y próxima fecha de mantenimiento.</p>
+            </div>
+            <button class="button button-primary" data-action="new-tool">+ Nuevo herramental</button>
+          </div>
+
+          <div class="toolbar panel compact-panel">
+            <label class="search-field">
+              <span>⌕</span>
+              <input id="toolSearch" type="search" placeholder="Buscar por ID, nombre o serie…">
+            </label>
+            <select id="toolStatusFilter" aria-label="Filtrar por estado">
+              <option value="all">Todos los estados</option>
+              <option value="tool">En Tool Crib</option>
+              <option value="floor">En piso</option>
+              <option value="maintenance">En mantenimiento</option>
+              <option value="scrap">Scrap</option>
+            </select>
+            <select id="toolTypeFilter" aria-label="Filtrar por tipo">
+              <option value="all">Todos los tipos</option>
+            </select>
+            <span class="result-count" id="toolResultCount">0 registros</span>
+          </div>
+
+          <div class="panel table-panel">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID / Herramental</th>
+                    <th>Tipo</th>
+                    <th>Ubicación</th>
+                    <th>Próximo mantenimiento</th>
+                    <th>Estado</th>
+                    <th class="align-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="toolsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-types" data-title="Tipos y checklists">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">ESTANDARIZACIÓN</p>
+              <h2>Tipos de herramental y checklists</h2>
+              <p>Crea una plantilla una vez y reutilízala en todos los herramentales del mismo tipo.</p>
+            </div>
+            <button class="button button-primary" data-action="new-type">+ Nuevo tipo</button>
+          </div>
+          <div class="type-grid" id="typeGrid"></div>
+        </section>
+
+        <section class="view" id="view-movements" data-title="Entradas y salidas">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">CONTROL DE UBICACIÓN</p>
+              <h2>Movimientos de herramental</h2>
+              <p>Registra quién solicita cada equipo, en qué línea se utiliza y cuándo regresa.</p>
+            </div>
+          </div>
+
+          <div class="action-cards">
+            <button class="action-card checkout-card" data-action="checkout">
+              <span class="action-card-icon">→</span>
+              <span>
+                <small>SALIDA</small>
+                <strong>Entregar a piso</strong>
+                <em>El sistema bloqueará equipos con mantenimiento vencido.</em>
+              </span>
+            </button>
+            <button class="action-card return-card" data-action="return">
+              <span class="action-card-icon">←</span>
+              <span>
+                <small>ENTRADA</small>
+                <strong>Regresar a Tool Crib</strong>
+                <em>Documenta condición y observaciones al recibir.</em>
+              </span>
+            </button>
+          </div>
+
+          <article class="panel table-panel">
+            <div class="panel-header padded-header">
+              <div>
+                <p class="eyebrow">HISTORIAL RECIENTE</p>
+                <h2>Últimos movimientos</h2>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fecha y hora</th>
+                    <th>Movimiento</th>
+                    <th>Herramental</th>
+                    <th>Ubicación / Línea</th>
+                    <th>Solicitante</th>
+                    <th>Registró</th>
+                  </tr>
+                </thead>
+                <tbody id="movementTableBody"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <section class="view" id="view-maintenance" data-title="Mantenimiento">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">MANTENIMIENTO PREVENTIVO</p>
+              <h2>Programa de mantenimiento</h2>
+              <p>Prioriza vencidos y próximos a vencer; documenta cada punto del checklist.</p>
+            </div>
+          </div>
+
+          <div class="segmented-control" id="maintenanceFilter">
+            <button class="active" data-maint-filter="all">Todos</button>
+            <button data-maint-filter="overdue">Vencidos</button>
+            <button data-maint-filter="dueSoon">Próximos</button>
+            <button data-maint-filter="current">Vigentes</button>
+          </div>
+
+          <article class="panel table-panel">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Herramental</th>
+                    <th>Tipo</th>
+                    <th>Último mantenimiento</th>
+                    <th>Próximo mantenimiento</th>
+                    <th>Condición</th>
+                    <th class="align-right">Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="maintenanceTableBody"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel table-panel history-panel">
+            <div class="panel-header padded-header">
+              <div>
+                <p class="eyebrow">EVIDENCIA</p>
+                <h2>Historial de mantenimientos</h2>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Herramental</th>
+                    <th>Realizó</th>
+                    <th>Resultado</th>
+                    <th>Próxima fecha</th>
+                    <th>Detalle</th>
+                  </tr>
+                </thead>
+                <tbody id="maintenanceHistoryBody"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <section class="view" id="view-traceability" data-title="Trazabilidad">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">HISTORIAL COMPLETO</p>
+              <h2>Trazabilidad por herramental</h2>
+              <p>Consulta altas, entregas, devoluciones, mantenimientos, cambios y scrap.</p>
+            </div>
+          </div>
+
+          <div class="panel trace-selector-panel">
+            <label>
+              <span>Selecciona un herramental</span>
+              <select id="traceToolSelect">
+                <option value="">Seleccionar…</option>
+              </select>
+            </label>
+          </div>
+          <div id="traceabilityContent"></div>
+        </section>
+
+        <section class="view" id="view-settings" data-title="Configuración y respaldo">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">ADMINISTRACIÓN LOCAL</p>
+              <h2>Configuración y respaldos</h2>
+              <p>Personaliza el kiosco y protege la información con copias periódicas.</p>
+            </div>
+          </div>
+
+          <div class="settings-grid">
+            <article class="panel settings-card">
+              <div class="settings-icon">⚙</div>
+              <h3>Datos del kiosco</h3>
+              <form id="settingsForm" class="form-stack">
+                <label>
+                  <span>Planta / área</span>
+                  <input id="settingSiteName" name="siteName" required maxlength="60">
+                </label>
+                <label>
+                  <span>Días de alerta predeterminados</span>
+                  <input id="settingWarningDays" name="defaultWarningDays" type="number" min="1" max="365" required>
+                </label>
+                <button class="button button-primary" type="submit">Guardar configuración</button>
+              </form>
+            </article>
+
+            <article class="panel settings-card">
+              <div class="settings-icon">↧</div>
+              <h3>Respaldo de información</h3>
+              <p>Descarga una copia completa. El archivo permite restaurar el sistema en esta u otra computadora.</p>
+              <div class="button-stack">
+                <button class="button button-primary" id="exportBackupButton">Exportar respaldo JSON</button>
+                <label class="button button-secondary file-button">
+                  Importar respaldo
+                  <input id="importBackupInput" type="file" accept="application/json,.json">
+                </label>
+                <button class="button button-secondary" id="exportCsvButton">Exportar inventario CSV</button>
+              </div>
+              <small id="dataSummary">Sin registros.</small>
+            </article>
+
+            <article class="panel settings-card">
+              <div class="settings-icon">◉</div>
+              <h3>Notificaciones del navegador</h3>
+              <p>Permite mostrar un aviso al abrir el kiosco cuando existan mantenimientos vencidos o próximos.</p>
+              <button class="button button-secondary" id="notificationButton">Activar notificaciones</button>
+              <small id="notificationStatus">Las alertas dentro de la aplicación siempre están activas.</small>
+            </article>
+
+            <article class="panel settings-card">
+              <div class="settings-icon">◎</div>
+              <h3>Datos de demostración</h3>
+              <p>Carga un ejemplo para conocer el flujo. Utiliza esta opción únicamente antes de capturar información real.</p>
+              <button class="button button-secondary" id="demoDataButton">Cargar datos de demostración</button>
+            </article>
+
+            <article class="panel settings-card" id="userManagementCard" hidden>
+              <div class="settings-icon">♙</div>
+              <h3>Usuarios y accesos</h3>
+              <p>Crea usuarios y asigna el perfil de acceso que necesitan.</p>
+              <form id="userCreateForm" class="form-stack">
+                <label><span>Nombre completo</span><input name="name" required maxlength="80"></label>
+                <label><span>Usuario para iniciar sesión</span><input name="username" required maxlength="40" autocomplete="off"></label>
+                <label><span>Perfil</span>
+                  <select name="role" required>
+                    <option value="admin">Administrador</option>
+                    <option value="engineer">Ingeniero</option>
+                    <option value="technician">Técnico</option>
+                    <option value="operator">Operador</option>
+                  </select>
+                </label>
+                <label><span>Contraseña (mínimo 8 caracteres)</span><input name="password" type="password" required minlength="8" autocomplete="new-password"></label>
+                <button class="button button-primary" type="submit">Dar de alta usuario</button>
+              </form>
+              <div class="user-list" id="userList"></div>
+            </article>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <button class="sidebar-scrim" id="sidebarScrim" type="button" aria-label="Cerrar menú"></button>
+
+  <div class="modal-backdrop" id="modalBackdrop" hidden>
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow" id="modalEyebrow">REGISTRO</p>
+          <h2 id="modalTitle">Título</h2>
+        </div>
+        <button class="icon-button" id="modalCloseButton" type="button" aria-label="Cerrar">×</button>
+      </div>
+      <form id="modalForm">
+        <div class="modal-body" id="modalBody"></div>
+        <div class="modal-footer" id="modalFooter">
+          <button class="button button-secondary" type="button" id="modalCancelButton">Cancelar</button>
+          <button class="button button-primary" type="submit" id="modalSubmitButton">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

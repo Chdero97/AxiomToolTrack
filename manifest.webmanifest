@@ -1,0 +1,19 @@
+{
+  "name": "ToolTrack - Administración de Herramental",
+  "short_name": "ToolTrack",
+  "description": "Control local, mantenimiento y trazabilidad de herramental.",
+  "lang": "es-MX",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f6f9",
+  "theme_color": "#123c69",
+  "icons": [
+    {
+      "src": "assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
